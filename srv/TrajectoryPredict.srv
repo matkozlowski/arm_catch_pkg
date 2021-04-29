@@ -3,3 +3,4 @@ geometry_msgs/Pose start_pose
 geometry_msgs/Twist start_twist
 ---
 geometry_msgs/Pose predicted_pose
+geometry_msgs/Twist predicted_twist

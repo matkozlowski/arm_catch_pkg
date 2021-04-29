@@ -5,6 +5,8 @@
 #include "arm_catch_pkg/TrajectoryPredict.h"
 #include "gazebo_msgs/ModelStates.h"
 #include <cstdlib>
+#include "Eigen/Dense"
+#include <cmath>
 
 class GazeboTrajectorySubscriber{
 public:
