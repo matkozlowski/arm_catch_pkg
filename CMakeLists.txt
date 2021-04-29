@@ -11,12 +11,15 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  sensor_msgs
   message_generation
   moveit_core 
   moveit_ros_planning 
   moveit_ros_planning_interface 
   moveit_visual_tools
   gazebo_msgs
+  cv_bridge
+  image_transport
 )
 
 find_package(Eigen)
@@ -147,6 +150,9 @@ add_executable(arm_subscriber src/arm_subscriber.cpp)
 add_executable(ball_launch src/ball_launch.cpp)
 add_executable(ball_trajectory_predict src/ball_trajectory_predict.cpp)
 add_executable(gazebo_trajectory src/gazebo_trajectory.cpp)
+add_executable(ball_detection_node src/BallSegment.cpp)
+
+
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -167,6 +173,7 @@ target_link_libraries(arm_subscriber ${catkin_LIBRARIES})
 target_link_libraries(ball_launch ${catkin_LIBRARIES})
 target_link_libraries(ball_trajectory_predict ${catkin_LIBRARIES})
 target_link_libraries(gazebo_trajectory ${catkin_LIBRARIES})
+target_link_libraries(ball_detection_node ${catkin_LIBRARIES})
 
 
 
