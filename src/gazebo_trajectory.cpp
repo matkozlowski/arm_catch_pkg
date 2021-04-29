@@ -3,7 +3,6 @@
 
 GazeboTrajectorySubscriber::GazeboTrajectorySubscriber(ros::NodeHandle &n){
 	_sub = n.subscribe("/gazebo/model_states", 1000, &GazeboTrajectorySubscriber::trajectoryCB, this);
-	_client = n.serviceClient<arm_catch_pkg::TrajectoryPredict>("trajectory_predict");
 	_pub = n.advertise<geometry_msgs::Pose>("arm_goal_pose", 1000);
 	published = false;
 }
@@ -13,28 +12,26 @@ void GazeboTrajectorySubscriber::trajectoryCB(const gazebo_msgs::ModelStates &ms
 
 	for(int n = 0; n < msg.name.size(); n++){
 		if(msg.name.at(n).compare("RoboCup SPL Ball") == 0){
-			srv.request.start_pose = msg.pose.at(n);
-			srv.request.start_twist = msg.twist.at(n);
-			
-			srv.request.time_s = 1;
-			_client.call(srv);
-			// for(float t = 0.5; t < 1.5; t += 0.5){
-			// 	srv.request.time_s = t;
-			// 	_client.call(srv);
+			geometry_msgs::Pose start_pose = msg.pose.at(n);
+			geometry_msgs::Twist start_twist = msg.twist.at(n);
 
-			// 	if(srv.response.predicted_pose.position.z > 0.5 && 
-			// 		srv.response.predicted_pose.position.z < 0.8 &&
-			// 		srv.response.predicted_pose.position.y > 0.2 &&
-			// 		srv.response.predicted_pose.position.y < 0.8){
+			geometry_msgs::Pose pred_pose;
+			geometry_msgs::Twist pred_twist;
+			float time_s;
+
+			for(float t = 0.5; t < 1.5; t+=0.01){
+				time_s = t;
+				predict_trajectory(start_pose, start_twist, time_s, pred_pose, pred_twist);
+				if(pred_pose.position.z > 0.5 && 
+					pred_pose.position.z < 0.8 &&
+					pred_pose.position.y > 0.2 &&
+					pred_pose.position.y < 0.8){
 					
-			// 		break;
-			// 	}
-			// }
-			
+					break;
+				}
+			}
 
-			
-
-			geometry_msgs::Pose goal_pose(srv.response.predicted_pose);
+			geometry_msgs::Pose goal_pose(pred_pose);
 			goal_pose.position.z -= 0.5; // Arm is vertically offset from ground
 
 			Eigen::MatrixXd xAxis(3,1);
@@ -47,8 +44,8 @@ void GazeboTrajectorySubscriber::trajectoryCB(const gazebo_msgs::ModelStates &ms
 			zAxis(2,0) = 1;
 
 			// Need to add pi to be angled towards the ball, rather than in line with it
-			float pitch = atan2(srv.response.predicted_twist.linear.z, srv.response.predicted_twist.linear.y) + M_PI;
-			float yaw = atan2(srv.response.predicted_twist.linear.y, srv.response.predicted_twist.linear.x) + M_PI;
+			float pitch = atan2(pred_twist.linear.z, pred_twist.linear.y) + M_PI;
+			float yaw = atan2(pred_twist.linear.y, pred_twist.linear.x) + M_PI;
 
 			Eigen::AngleAxisd rotX(pitch, xAxis);
 			Eigen::AngleAxisd rotZ(yaw, zAxis);

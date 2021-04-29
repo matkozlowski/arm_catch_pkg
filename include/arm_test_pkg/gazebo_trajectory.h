@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include "Eigen/Dense"
 #include <cmath>
+#include "arm_test_pkg/ball_trajectory_predict.h"
 
 class GazeboTrajectorySubscriber{
 public:
@@ -14,7 +15,6 @@ public:
 	void trajectoryCB(const gazebo_msgs::ModelStates &msg);
 
 protected:
-	ros::ServiceClient _client;
 	ros::Subscriber _sub;
 	ros::Publisher _pub;
 	bool published;

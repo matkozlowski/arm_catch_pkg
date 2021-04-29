@@ -132,9 +132,9 @@ include_directories(
   /usr/include/eigen3/
 )
 
-## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/arm_test_pkg.cpp
+# Declare a C++ library
+# add_library(arm_catch_lib
+#   src/arm_catch_pkg/src/ball_trajectory_predict.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -148,8 +148,7 @@ include_directories(
 add_executable(arm_test_node src/arm_test_node.cpp)
 add_executable(arm_subscriber src/arm_subscriber.cpp)
 add_executable(ball_launch src/ball_launch.cpp)
-add_executable(ball_trajectory_predict src/ball_trajectory_predict.cpp)
-add_executable(gazebo_trajectory src/gazebo_trajectory.cpp)
+add_executable(gazebo_trajectory src/gazebo_trajectory.cpp src/ball_trajectory_predict.cpp)
 add_executable(ball_detection_node src/BallSegment.cpp)
 
 
@@ -171,8 +170,8 @@ target_link_libraries(arm_test_node
 )
 target_link_libraries(arm_subscriber ${catkin_LIBRARIES})
 target_link_libraries(ball_launch ${catkin_LIBRARIES})
-target_link_libraries(ball_trajectory_predict ${catkin_LIBRARIES})
-target_link_libraries(gazebo_trajectory ${catkin_LIBRARIES})
+# target_link_libraries(ball_trajectory_predict ${catkin_LIBRARIES})
+target_link_libraries(gazebo_trajectory ${catkin_LIBRARIES} )
 target_link_libraries(ball_detection_node ${catkin_LIBRARIES})
 
 
