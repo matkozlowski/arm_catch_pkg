@@ -10,7 +10,7 @@ bool predict(arm_catch_pkg::TrajectoryPredict::Request &req,
 	// Vertical Motion (z)
 	// z = z_0 + (v_0z * t) + ((1/2) * g * t^2)
 	prediction.position.z = req.start_pose.position.z + (req.start_twist.linear.z * req.time_s) + 
-							(-4.9 * pow(req.time_s, 2));
+							(-4.9035 * pow(req.time_s, 2));
 
 	// Horizontal Motion (x)
 	// x = x_0 + v_x * t

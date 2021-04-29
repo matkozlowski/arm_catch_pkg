@@ -14,8 +14,8 @@ public:
 protected:
 	ros::ServiceClient _client;
 	ros::Subscriber _sub;
-
-
+	ros::Publisher _pub;
+	bool published;
 };
 
 

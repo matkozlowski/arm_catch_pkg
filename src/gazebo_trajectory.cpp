@@ -4,6 +4,8 @@
 GazeboTrajectorySubscriber::GazeboTrajectorySubscriber(ros::NodeHandle &n){
 	_sub = n.subscribe("/gazebo/model_states", 1000, &GazeboTrajectorySubscriber::trajectoryCB, this);
 	_client = n.serviceClient<arm_catch_pkg::TrajectoryPredict>("trajectory_predict");
+	_pub = n.advertise<geometry_msgs::Pose>("arm_goal_pose", 1000);
+	published = false;
 }
 
 void GazeboTrajectorySubscriber::trajectoryCB(const gazebo_msgs::ModelStates &msg){
@@ -17,11 +19,19 @@ void GazeboTrajectorySubscriber::trajectoryCB(const gazebo_msgs::ModelStates &ms
 
 			_client.call(srv);
 
-			ROS_INFO("Trajectory Prediction Service Called");
-			ROS_INFO("X: %f\nY: %f\nZ: %f", 
-				srv.response.predicted_pose.position.x,
-				srv.response.predicted_pose.position.y,
-				srv.response.predicted_pose.position.z); 
+			
+
+			geometry_msgs::Pose goal_pose(srv.response.predicted_pose);
+			goal_pose.position.z -= 0.5; // Arm is vertically offset from ground
+			if(!published && goal_pose.position.z > 0 && goal_pose.position.y > 0){
+				ROS_INFO("Trajectory Prediction Service Called\nX: %f\nY: %f\nZ: %f", 
+					goal_pose.position.x,
+					goal_pose.position.y,
+					goal_pose.position.z); 
+				_pub.publish(goal_pose);
+				published = true;
+			}
+			
 			return;
 		}
 	}

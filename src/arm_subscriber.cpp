@@ -26,7 +26,12 @@ void ArmSubscriber::poseCallback(const geometry_msgs::Pose &msg){
 	moveit::planning_interface::MoveGroupInterface::Plan plan;
 
 	ROS_INFO("Planning starting...");
-	bool success = (_move_group.plan(plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+	bool success = false;
+	int tries = 0;
+	while(!success && tries < 3){
+		success = (_move_group.plan(plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+		tries++;
+	}
 	ROS_INFO("Planning: %s", success ? "successful" : "unsuccessful");
 
 	_visual_tools.publishAxisLabeled(target_pose, "target_pose");
