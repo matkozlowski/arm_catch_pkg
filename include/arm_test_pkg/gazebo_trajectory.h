@@ -17,7 +17,10 @@ public:
 protected:
 	ros::Subscriber _sub;
 	ros::Publisher _pub;
-	bool published;
+	bool _published;
+	bool _prev_pose_exists;
+	ros::Time _prev_pose_time;
+	geometry_msgs::Pose _prev_pose;
 };
 
 
