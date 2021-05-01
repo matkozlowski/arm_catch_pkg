@@ -32,6 +32,11 @@ class BallSegment {
         // transform image into HSV
         cv::cvtColor(cv_img->image, HSVImage, CV_BGR2HSV);
         cv::inRange(HSVImage, cv::Scalar(0, 50, 0), cv::Scalar(255, 255, 255), ThreshImage);
+
+        cv::Moments moments = cv::moments(ThreshImage);
+        cv::Point centerPoint(moments.m10/moments.m00, moments.m01/moments.m00);
+        cv::circle(ThreshImage, centerPoint, 2, cv::Scalar(128,0,0), -1);
+
         cv_bridge::CvImage segmentedBall(std_msgs::Header(), "mono8", ThreshImage);
         image_pub_.publish(segmentedBall.toImageMsg());
     }
