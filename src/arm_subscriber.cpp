@@ -12,6 +12,35 @@ ArmSubscriber::ArmSubscriber(ros::NodeHandle &n) : _PLANNING_GROUP("manipulator"
 void ArmSubscriber::poseCallback(const geometry_msgs::Pose &msg){
 	ROS_INFO("Received pose");
 
+	// Add collision object that represents box robot is sitting on
+	moveit_msgs::CollisionObject collision_object;
+	collision_object.header.frame_id = _move_group.getPlanningFrame();
+
+	collision_object.id = "box";
+
+	shape_msgs::SolidPrimitive primitive;
+	primitive.type = primitive.BOX;
+	primitive.dimensions.resize(3);
+	primitive.dimensions[0] = 0.5;
+	primitive.dimensions[1] = 0.5;
+	primitive.dimensions[2] = 0.5;
+
+	geometry_msgs::Pose box_pose;
+	box_pose.orientation.w = 1.0;
+	box_pose.position.x = 0;
+	box_pose.position.y = 0;
+	box_pose.position.z = -0.25;
+
+	collision_object.primitives.push_back(primitive);
+	collision_object.primitive_poses.push_back(box_pose);
+	collision_object.operation = collision_object.ADD;
+
+	std::vector<moveit_msgs::CollisionObject> collision_objects;
+	collision_objects.push_back(collision_object);
+
+	_planning_scene_interface.addCollisionObjects(collision_objects);
+
+
 	geometry_msgs::Pose target_pose;
 	target_pose.orientation.w = msg.orientation.w;
 	target_pose.orientation.x = msg.orientation.x;
@@ -34,8 +63,8 @@ void ArmSubscriber::poseCallback(const geometry_msgs::Pose &msg){
 	}
 	ROS_INFO("Planning: %s", success ? "successful" : "unsuccessful");
 
-	_visual_tools.publishAxisLabeled(target_pose, "target_pose");
-	_visual_tools.publishTrajectoryLine(plan.trajectory_, _joint_model_group);
+	//_visual_tools.publishAxisLabeled(target_pose, "target_pose");
+	//_visual_tools.publishTrajectoryLine(plan.trajectory_, _joint_model_group);
 
 	ROS_INFO("Executing...");
 	if(success){

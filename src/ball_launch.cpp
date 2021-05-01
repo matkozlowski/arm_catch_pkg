@@ -1,4 +1,7 @@
 #include <ros/ros.h>
+#include <cstdlib>
+#include <ctime>
+#include <string>
 #include "ros/service_client.h"
 #include "gazebo_msgs/SetModelState.h"
 #include "gazebo_msgs/ModelState.h"
@@ -12,10 +15,19 @@ int main(int argc, char** argv)
 
 	ros::ServiceClient modelState_Client = node_handle.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
 
+	
 	geometry_msgs::Pose modelPose;
-	modelPose.position.x = 0;
-	modelPose.position.y = 6;
-	modelPose.position.z = 0.5;
+	float x_pos = 0;
+	float y_pos = 0;
+	float z_pos = 0;
+	if(argc == 7){
+		x_pos = std::stof(argv[1]);
+		y_pos = std::stof(argv[2]);
+		z_pos = std::stof(argv[3]);
+	}
+	modelPose.position.x = x_pos;
+	modelPose.position.y = y_pos;
+	modelPose.position.z = z_pos;
 	modelPose.orientation.w = 1.0;
 	modelPose.orientation.x = 0.0;
 	modelPose.orientation.y = 0.0;
@@ -24,6 +36,18 @@ int main(int argc, char** argv)
 	gazebo_msgs::ModelState modelState;
 	modelState.model_name = (std::string) "RoboCup SPL Ball";
 	modelState.pose = modelPose;
+	
+	float x_vel = 0;
+	float y_vel = 0;
+	float z_vel = 0;
+	if(argc == 7){
+		x_vel = std::stof(argv[4]);
+		y_vel = std::stof(argv[5]);
+		z_vel = std::stof(argv[6]);
+	}
+	modelState.twist.linear.z = z_vel;
+	modelState.twist.linear.y = y_vel;
+	modelState.twist.linear.x = x_vel;
 
 	gazebo_msgs::SetModelState srv;
 	srv.request.model_state = modelState;
@@ -32,23 +56,20 @@ int main(int argc, char** argv)
 
 
 
-	ros::ServiceClient abwClient = node_handle.serviceClient<gazebo_msgs::ApplyBodyWrench>("/gazebo/apply_body_wrench");
-
-	geometry_msgs::Wrench wrench;
-	wrench.force.x = 0.0;
-	wrench.force.y = -30.0;
-	wrench.force.z = 30.0;
-	wrench.torque.x = 0.0;
-	wrench.torque.y = 0.0;
-	wrench.torque.z = 0.0;
-
-	gazebo_msgs::ApplyBodyWrench abw;
-	abw.request.body_name = (std::string) "RoboCup SPL Ball::ball";
-	abw.request.wrench = wrench;
-	abw.request.start_time = ros::Time::now();
-	abw.request.duration = ros::Duration(0.001); // This was just empirically determined
-
-	abwClient.call(abw);
+	// Range for targeting:
+	// -0.3 < x < 0.3
+	// 0.3 < y < 0.75
+	// 0.6 < z < 1.0
+	// srand (static_cast <unsigned> (time(0)));
+	// float x_min = -0.3;
+	// float x_max =0.3;
+	// float y_min = 0.3;
+	// float y_max = 0.75;
+	// float z_min = 0.6;
+	// float z_max = 1.0;
+	// float randX = x_min + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(x_max-x_min)));
+	// float randY = y_min + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(y_max-y_min)));
+	// float randZ = z_min + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(z_max-z_min)));
 
 
 	return 0;

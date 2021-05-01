@@ -8,8 +8,9 @@ GazeboTrajectorySubscriber::GazeboTrajectorySubscriber(ros::NodeHandle &n){
 }
 
 void GazeboTrajectorySubscriber::trajectoryCB(const gazebo_msgs::ModelStates &msg){
-	arm_catch_pkg::TrajectoryPredict srv;
 
+
+	if(!published){
 	for(int n = 0; n < msg.name.size(); n++){
 		if(msg.name.at(n).compare("RoboCup SPL Ball") == 0){
 			geometry_msgs::Pose start_pose = msg.pose.at(n);
@@ -19,13 +20,15 @@ void GazeboTrajectorySubscriber::trajectoryCB(const gazebo_msgs::ModelStates &ms
 			geometry_msgs::Twist pred_twist;
 			float time_s;
 
-			for(float t = 0.5; t < 1.5; t+=0.01){
+			for(float t = 0.0; t < 4.0; t+=0.01){
 				time_s = t;
 				predict_trajectory(start_pose, start_twist, time_s, pred_pose, pred_twist);
 				if(pred_pose.position.z > 0.5 && 
 					pred_pose.position.z < 0.8 &&
 					pred_pose.position.y > 0.2 &&
-					pred_pose.position.y < 0.8){
+					pred_pose.position.y < 0.8 &&
+					pred_pose.position.x > -0.3 &&
+					pred_pose.position.x < 0.3){
 					
 					break;
 				}
@@ -59,7 +62,7 @@ void GazeboTrajectorySubscriber::trajectoryCB(const gazebo_msgs::ModelStates &ms
 			goal_pose.orientation.w = rotated.w();
 
 			if(!published && goal_pose.position.z > 0 && goal_pose.position.y > 0){
-				ROS_INFO("Trajectory Prediction Service Called\nX: %f\nY: %f\nZ: %f", 
+				ROS_INFO("Predicted Position:\nX: %f\nY: %f\nZ: %f", 
 					goal_pose.position.x,
 					goal_pose.position.y,
 					goal_pose.position.z); 
@@ -69,6 +72,7 @@ void GazeboTrajectorySubscriber::trajectoryCB(const gazebo_msgs::ModelStates &ms
 			
 			return;
 		}
+	}
 	}
 }
 
