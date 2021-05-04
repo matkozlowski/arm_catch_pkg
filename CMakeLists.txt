@@ -152,6 +152,7 @@ add_executable(arm_test_node src/arm_test_node.cpp)
 add_executable(arm_subscriber src/arm_subscriber.cpp)
 add_executable(ball_launch src/ball_launch.cpp)
 add_executable(gazebo_trajectory src/gazebo_trajectory.cpp src/ball_trajectory_predict.cpp)
+add_executable(vision_trajectory src/vision_trajectory.cpp src/ball_trajectory_predict.cpp)
 add_executable(ball_detection_node src/BallSegment.cpp)
 add_executable(pointcloud_sub src/pointcloud_sub.cpp)
 
@@ -176,7 +177,8 @@ target_link_libraries(arm_subscriber ${catkin_LIBRARIES})
 target_link_libraries(ball_launch ${catkin_LIBRARIES})
 # target_link_libraries(ball_trajectory_predict ${catkin_LIBRARIES})
 target_link_libraries(gazebo_trajectory ${catkin_LIBRARIES} )
-target_link_libraries(ball_detection_node ${catkin_LIBRARIES})
+target_link_libraries(vision_trajectory ${catkin_LIBRARIES} )
+target_link_libraries(ball_detection_node ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 target_link_libraries(pointcloud_sub ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 
