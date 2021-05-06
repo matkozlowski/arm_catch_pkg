@@ -78,8 +78,7 @@ class BallSegment {
 		// Uses point cloud data to determine location of center of ball
 		// Ensures that center of ball is within the image
 		if(centerPoint.x >= 0 && centerPoint.y >= 0){
-			pcl::PointXYZ pc
-				_point = pcloud->at(centerPoint.x, centerPoint.y);
+			pcl::PointXYZ pc_point = pcloud->at(centerPoint.x, centerPoint.y);
 			printf("-------CENTER-------\n");
 			printf("x: %f, y: %f, z:%f\n", pc_point.x, pc_point.z + 0.25, -pc_point.y + 0.55);
 			geometry_msgs::Pose ball_pose;
