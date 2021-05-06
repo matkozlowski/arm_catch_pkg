@@ -26,9 +26,9 @@ find_package(PCL REQUIRED)
 
 find_package(Eigen)
 
-find_package(xtl REQUIRED)
-
 find_package(xtensor REQUIRED)
+
+find_package(xtensor-blas REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -73,7 +73,7 @@ find_package(xtensor REQUIRED)
 # Generate services in the 'srv' folder
 add_service_files(
   FILES
-  TrajectoryPredict.srv
+  TrajectoryPredict.src
 )
 
 ## Generate actions in the 'action' folder
