@@ -7,10 +7,14 @@
 #include <cv_bridge/cv_bridge.h>
 #include <pcl_ros/point_cloud.h>
 #include <pcl/point_types.h>
+#include <math.h>
 #include <geometry_msgs/Pose.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
 #include <sensor_msgs/Image.h>
+#include <xtensor/xarray.hpp>
+#include <xtensor/xmath.hpp>
+#include <xtensor/xio.hpp>
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 
@@ -72,14 +76,31 @@ class BallSegment {
 
 
 		if(centerPoint.x >= 0 && centerPoint.y >= 0){
-			pcl::PointXYZ pc_point = pcloud->at(centerPoint.x, centerPoint.y);
+			pcl::PointXYZ pc
+				_point = pcloud->at(centerPoint.x, centerPoint.y);
 			printf("-------CENTER-------\n");
 			printf("x: %f, y: %f, z:%f\n", pc_point.x, pc_point.z + 0.25, -pc_point.y + 0.55);
-			
 			geometry_msgs::Pose ball_pose;
 			ball_pose.position.x = pc_point.x;
 			ball_pose.position.y = pc_point.z + 0.25;
 			ball_pose.position.z = -pc_point.y + 0.55;
+			// Assemble the point matrices
+			xt::xarray<double> spX, spY, spZ, A, F; 
+			spX = xt::xarray<double>(ball_pose.position.x);
+			spY = xt::xarray<double>(ball_pose.position.y);
+			spZ = xt::xarray<double>(ball_pose.position.z);
+			A = xt::zeros<double>((ball_pose.position.x.length, 4));
+			xt::col(A, 0) = ball_pose.position.x * 2;
+			xt::col(A, 1) = ball_pose.position.y * 2;
+			xt::col(A, 2) = ball_pose.position.z * 2;
+			xt::col(A, 3) = 1;
+			
+			// Assemble the lstqr matrix
+			F = xt::zeros<double>((ball_pose.position.x.length, 1));
+			xt::col(F, 0) = (spX * spX) + (spY * spY) + (spZ * spZ);
+			C, residuals, rank, singval = xt::linalg::lstsq(A, F);
+			double t = (C[0] * C[0]) + (C[1] * C[1]) + (C[2] * C[2]) + C[3];	
+			double radius = sqrt(t);
 			_ball_pose_pub.publish(ball_pose);
 		}
 
