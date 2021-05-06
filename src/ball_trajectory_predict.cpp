@@ -1,8 +1,10 @@
 #include "arm_test_pkg/ball_trajectory_predict.h"
 
-
+// Predicts the eventual position and velocity of an object given its starting 
+// pose and velocity (meters), as well as an amount of time (seconds)
 void predict_trajectory(geometry_msgs::Pose start_pose, geometry_msgs::Twist start_twist,
 		float time_s, geometry_msgs::Pose &pred_pose, geometry_msgs::Twist &pred_twist){
+			
 	// Vertical Motion (z)
 	// z = z_0 + (v_0z * t) + ((1/2) * -g * t^2)
 	// v_z = v_0z - g*t

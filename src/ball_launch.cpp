@@ -7,16 +7,23 @@
 #include "gazebo_msgs/ModelState.h"
 #include "gazebo_msgs/ApplyBodyWrench.h"
 
+// Launches the ball in the simulation from a provided position with a provided velocity
+// Takes 6 command line arguments in this order:
+// 	X, Y, Z position of ball
+//	X, Y, Z velocity of ball
 int main(int argc, char** argv)
 {
 	ros::init(argc, argv, "ball_launch");
 	ros::NodeHandle node_handle;
 
-
+	// Create a client for the gazebo service that sets model states
 	ros::ServiceClient modelState_Client = node_handle.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
 
-	
-	geometry_msgs::Pose modelPose;
+	// Create object for ball model in gazebo
+	gazebo_msgs::ModelState modelState;
+	modelState.model_name = (std::string) "RoboCup SPL Ball";
+
+	// Determine the starting pose of the ball
 	float x_pos = 0;
 	float y_pos = 0;
 	float z_pos = 0;
@@ -25,18 +32,15 @@ int main(int argc, char** argv)
 		y_pos = std::stof(argv[2]);
 		z_pos = std::stof(argv[3]);
 	}
-	modelPose.position.x = x_pos;
-	modelPose.position.y = y_pos;
-	modelPose.position.z = z_pos;
-	modelPose.orientation.w = 1.0;
-	modelPose.orientation.x = 0.0;
-	modelPose.orientation.y = 0.0;
-	modelPose.orientation.z = 0.0;
+	modelState.pose.position.x = x_pos;
+	modelState.pose.position.y = y_pos;
+	modelState.pose.position.z = z_pos;
+	modelState.pose.orientation.w = 1.0;
+	modelState.pose.orientation.x = 0.0;
+	modelState.pose.orientation.y = 0.0;
+	modelState.pose.orientation.z = 0.0;
 
-	gazebo_msgs::ModelState modelState;
-	modelState.model_name = (std::string) "RoboCup SPL Ball";
-	modelState.pose = modelPose;
-	
+	// Determine the starting velocity of the ball
 	float x_vel = 0;
 	float y_vel = 0;
 	float z_vel = 0;
@@ -49,28 +53,10 @@ int main(int argc, char** argv)
 	modelState.twist.linear.y = y_vel;
 	modelState.twist.linear.x = x_vel;
 
+	// Call the service to set the position and velocity of the ball
 	gazebo_msgs::SetModelState srv;
 	srv.request.model_state = modelState;
-
 	modelState_Client.call(srv);
-
-
-
-	// Range for targeting:
-	// -0.3 < x < 0.3
-	// 0.3 < y < 0.75
-	// 0.6 < z < 1.0
-	// srand (static_cast <unsigned> (time(0)));
-	// float x_min = -0.3;
-	// float x_max =0.3;
-	// float y_min = 0.3;
-	// float y_max = 0.75;
-	// float z_min = 0.6;
-	// float z_max = 1.0;
-	// float randX = x_min + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(x_max-x_min)));
-	// float randY = y_min + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(y_max-y_min)));
-	// float randZ = z_min + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(z_max-z_min)));
-
 
 	return 0;
 }

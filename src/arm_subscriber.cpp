@@ -1,6 +1,7 @@
 #include "arm_test_pkg/arm_subscriber.h"
 
-
+// Class that motion plans and then moves the arm into a position provided by a topic
+// that the class is subscribed to
 ArmSubscriber::ArmSubscriber(ros::NodeHandle &n) : _PLANNING_GROUP("manipulator"),
 	_move_group(_PLANNING_GROUP), _visual_tools("base_link"){
 
@@ -9,15 +10,17 @@ ArmSubscriber::ArmSubscriber(ros::NodeHandle &n) : _PLANNING_GROUP("manipulator"
 	_visual_tools.deleteAllMarkers();
 }
 
+// Callback function that creates and executes a motion plan for the arm when
+// a goal pose is received on the subscribed topic
 void ArmSubscriber::poseCallback(const geometry_msgs::Pose &msg){
 	ROS_INFO("Received pose");
 
 	// Add collision object that represents box robot is sitting on
-	moveit_msgs::CollisionObject collision_object;
-	collision_object.header.frame_id = _move_group.getPlanningFrame();
+	moveit_msgs::CollisionObject collision_object_box;
+	collision_object_box.header.frame_id = _move_group.getPlanningFrame();
+	collision_object_box.id = "box";
 
-	collision_object.id = "box";
-
+	// Size of box
 	shape_msgs::SolidPrimitive primitive;
 	primitive.type = primitive.BOX;
 	primitive.dimensions.resize(3);
@@ -25,22 +28,23 @@ void ArmSubscriber::poseCallback(const geometry_msgs::Pose &msg){
 	primitive.dimensions[1] = 0.5;
 	primitive.dimensions[2] = 0.5;
 
+	// Position of box
 	geometry_msgs::Pose box_pose;
 	box_pose.orientation.w = 1.0;
 	box_pose.position.x = 0;
 	box_pose.position.y = 0;
 	box_pose.position.z = -0.25;
 
-	collision_object.primitives.push_back(primitive);
-	collision_object.primitive_poses.push_back(box_pose);
-	collision_object.operation = collision_object.ADD;
-
+	// Add collision objects into planning scene
+	collision_object_box.primitives.push_back(primitive);
+	collision_object_box.primitive_poses.push_back(box_pose);
+	collision_object_box.operation = collision_object_box.ADD;
 	std::vector<moveit_msgs::CollisionObject> collision_objects;
-	collision_objects.push_back(collision_object);
-
+	collision_objects.push_back(collision_object_box);
 	_planning_scene_interface.addCollisionObjects(collision_objects);
 
 
+	// Use received message to construct the target pose for the arm
 	geometry_msgs::Pose target_pose;
 	target_pose.orientation.w = msg.orientation.w;
 	target_pose.orientation.x = msg.orientation.x;
@@ -51,9 +55,9 @@ void ArmSubscriber::poseCallback(const geometry_msgs::Pose &msg){
 	target_pose.position.z = msg.position.z;
 
 	_move_group.setPoseTarget(target_pose);
-
 	moveit::planning_interface::MoveGroupInterface::Plan plan;
 
+	// Attempt to create a motion plan three times before giving up
 	ROS_INFO("Planning starting...");
 	bool success = false;
 	int tries = 0;
@@ -65,9 +69,10 @@ void ArmSubscriber::poseCallback(const geometry_msgs::Pose &msg){
 
 	//_visual_tools.publishAxisLabeled(target_pose, "target_pose");
 	//_visual_tools.publishTrajectoryLine(plan.trajectory_, _joint_model_group);
-
-	ROS_INFO("Executing...");
+	
+	// Execute the motion plan if one was successfully created
 	if(success){
+		ROS_INFO("Executing...");
 		_move_group.execute(plan);
 		ROS_INFO("Plan executed");
 	}

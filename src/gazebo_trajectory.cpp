@@ -1,6 +1,8 @@
 #include "arm_test_pkg/gazebo_trajectory.h"
 
-
+// Class that subscribes to position of ball through gazebo
+// and uses that information to predict the trajectory of the ball and publish
+// a goal position for the arm to move to in order to catch the ball
 GazeboTrajectorySubscriber::GazeboTrajectorySubscriber(ros::NodeHandle &n){
 	_sub = n.subscribe("/gazebo/model_states", 1000, &GazeboTrajectorySubscriber::trajectoryCB, this);
 	_pub = n.advertise<geometry_msgs::Pose>("arm_goal_pose", 1000);
@@ -94,7 +96,7 @@ void GazeboTrajectorySubscriber::trajectoryCB(const gazebo_msgs::ModelStates &ms
 					pred_twist.linear.x,
 					pred_twist.linear.y,
 					pred_twist.linear.z); 
-				_pub.publish(goal_pose);
+				//_pub.publish(goal_pose);
 				_published = true;
 			}
 			
