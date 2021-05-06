@@ -26,6 +26,10 @@ find_package(PCL REQUIRED)
 
 find_package(Eigen)
 
+find_package(xtl REQUIRED)
+
+find_package(xtensor REQUIRED)
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -180,7 +184,7 @@ target_link_libraries(gazebo_trajectory ${catkin_LIBRARIES} )
 target_link_libraries(vision_trajectory ${catkin_LIBRARIES} )
 target_link_libraries(ball_detection_node ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 target_link_libraries(pointcloud_sub ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-
+target_link_libraries (arm_catch_pkg xtensor xtensor::optimize xtensor::use_xsimd)
 
 
 #############
