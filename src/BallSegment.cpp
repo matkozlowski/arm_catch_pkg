@@ -8,16 +8,17 @@
 #include <pcl_ros/point_cloud.h>
 #include <pcl/point_types.h>
 #include <math.h>
-#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
 #include <sensor_msgs/Image.h>
-#include <xtensor/xarray.hpp>
-#include <xtensor/xmath.hpp>
-#include <xtensor/xio.hpp>
-#include <xtensor/xtensor.hpp>
-#include <xtensor/xrandom.hpp>
-#include <xtensor-blas/xlinalg.hpp>
+#include "gazebo_msgs/GetModelState.h"
+// #include <xtensor/xarray.hpp>
+// #include <xtensor/xmath.hpp>
+// #include <xtensor/xio.hpp>
+// #include <xtensor/xtensor.hpp>
+// #include <xtensor/xrandom.hpp>
+// #include <xtensor/xlinalg.hpp>
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 
@@ -25,11 +26,11 @@ class BallSegment {
 
 	ros::NodeHandle nh_;
 	image_transport::ImageTransport it_;
-	//image_transport::Subscriber image_sub_;
 	image_transport::Publisher image_pub_;
-	//ros::Subscriber _point_cloud_sub;
 	cv::Point _ball_center;
 	ros::Publisher _ball_pose_pub;
+
+	ros::ServiceClient _gz_client;
 
 	message_filters::Subscriber<sensor_msgs::Image> _im_sub;
 	message_filters::Subscriber<PointCloud> _pc_sub;
@@ -39,17 +40,23 @@ class BallSegment {
 
 	public:BallSegment() : it_(nh_), _im_sub(nh_, "/camera/color/image_raw", 1), _pc_sub(nh_, "/camera/depth/points", 1),
 		t_sync(_im_sub, _pc_sub, 10) {
-		//image_sub_ = it_.subscribe("/camera/color/image_raw", 1, &BallSegment::imageSplit, this);
-		image_pub_ = it_.advertise("/color_filter/segmented_ball", 1);
-		//_point_cloud_sub = nh_.subscribe<PointCloud>("/camera/depth/points", 1, &BallSegment::sphere_fit, this);
-		_ball_pose_pub = nh_.advertise<geometry_msgs::Pose>("ball_pose_vision", 1000);
 
-		//t_sync.registerCallback(boost::bind(&syncCB, _1, _2));
+		image_pub_ = it_.advertise("/color_filter/segmented_ball", 1);
+		_ball_pose_pub = nh_.advertise<geometry_msgs::PoseStamped>("ball_pose_vision", 1000);
+
+		_gz_client = nh_.serviceClient<gazebo_msgs::GetModelState>("/gazebo/get_model_state");
+
 		t_sync.registerCallback(&BallSegment::syncCB, this);
 	}
 
 	void syncCB(const sensor_msgs::ImageConstPtr& img, const PointCloud::ConstPtr& pcloud){
-		//ROS_INFO("BRO");
+		gazebo_msgs::GetModelState srv;
+		srv.request.model_name = "RoboCup SPL Ball";
+		_gz_client.call(srv);
+
+		printf("--------------\n");
+		printf("-------ACTUAL-------\n");
+		ROS_INFO("x: %f, y: %f, z: %f\n", srv.response.pose.position.x, srv.response.pose.position.y, srv.response.pose.position.z);
 
 		cv_bridge::CvImagePtr cv_img;
 		try {
@@ -79,79 +86,119 @@ class BallSegment {
 
 
 		if(centerPoint.x >= 0 && centerPoint.y >= 0){
-			pcl::PointXYZ pc_point = pcloud->at(centerPoint.x, centerPoint.y);
-			printf("-------CENTER-------\n");
-			printf("x: %f, y: %f, z:%f\n", pc_point.x, pc_point.z, -pc_point.y);
-			geometry_msgs::Pose ball_pose;
-			ball_pose.position.x = pc_point.x; 
-			ball_pose.position.y = pc_point.z; // + .25
-			ball_pose.position.z = -pc_point.y; // + .55
+			pcl::PointXYZ pc_point = sphere_fit(ThreshImage, pcloud);
+			printf("-------PREDICTED-------\n");
+			ROS_INFO("x: %f, y: %f, z:%f\n\n", pc_point.x, pc_point.z + 0.25, -pc_point.y + 0.55);
+			geometry_msgs::PoseStamped ball_pose;
+			ball_pose.pose.position.x = pc_point.x; 
+			ball_pose.pose.position.y = pc_point.z + .25;
+			ball_pose.pose.position.z = -pc_point.y + .55;
 
-			// Assemble the point matrices
-			xt::xarray<double> spX, spY, spZ, A, F; 
-			spX = xt::xarray<double>(ball_pose.position.x);
-			spY = xt::xarray<double>(ball_pose.position.y);
-			spZ = xt::xarray<double>(ball_pose.position.z);
-			A = xt::zeros<double>((spX.size(), 4));
-			xt::col(A, 0) = ball_pose.position.x * 2;
-			xt::col(A, 1) = ball_pose.position.y * 2;
-			xt::col(A, 2) = ball_pose.position.z * 2;
-			xt::col(A, 3) = 1;
-			
-			// Assemble the lstqr matrix
-			F = xt::zeros<double>((spX.size(), 1));
-			xt::col(F, 0) = (spX * spX) + (spY * spY) + (spZ * spZ);
-			auto res = xt::linalg::lstsq(A, F);
-			
-			// here is the solution to the least square fit 
-			xt::xarray<double> C = get<0>(res);
-            
-			double t = (C[0] * C[0]) + (C[1] * C[1]) + (C[2] * C[2]) + C[3];	
-			// here is the radius of the ball - do with this value what you will
-			double radius = sqrt(t);
+			std_msgs::Header hdr;
+			hdr.stamp = ros::Time::now();
+			ball_pose.header = hdr;
 
 			_ball_pose_pub.publish(ball_pose);
+
+			
+
+			
+
+			
+
+			// // Assemble the point matrices
+			// xt::xarray<double> spX, spY, spZ, A, F; 
+			// spX = xt::xarray<double>(ball_pose.position.x);
+			// spY = xt::xarray<double>(ball_pose.position.y);
+			// spZ = xt::xarray<double>(ball_pose.position.z);
+			// A = xt::zeros<double>((spX.size(), 4));
+			// xt::col(A, 0) = ball_pose.position.x * 2;
+			// xt::col(A, 1) = ball_pose.position.y * 2;
+			// xt::col(A, 2) = ball_pose.position.z * 2;
+			// xt::col(A, 3) = 1;
+			
+			// // Assemble the lstqr matrix
+			// F = xt::zeros<double>((spX.size(), 1));
+			// xt::col(F, 0) = (spX * spX) + (spY * spY) + (spZ * spZ);
+			// auto res = xt::linalg::lstsq(A, F);
+			
+			// // here is the solution to the least square fit 
+			// xt::xarray<double> C = get<0>(res);
+            
+			// double t = (C[0] * C[0]) + (C[1] * C[1]) + (C[2] * C[2]) + C[3];	
+			// // here is the radius of the ball - do with this value what you will
+			// double radius = sqrt(t);
+			
 		}
 
 		return;
 	}
 
-	void sphere_fit(const PointCloud::ConstPtr& p_cloud){
-		
-		if(_ball_center.x >= 0 && _ball_center.y >= 0){
-			pcl::PointXYZ pc_point = p_cloud->at(_ball_center.x, _ball_center.y);
-			printf("-------CENTER-------\n");
-			printf("x: %f, y: %f, z:%f\n", pc_point.x + 0.015, pc_point.z + 0.25 + 0.015, -pc_point.y + 0.55);
-			
-			geometry_msgs::Pose ball_pose;
-			ball_pose.position.x = pc_point.x + 0.015;
-			ball_pose.position.y = pc_point.z + 0.015 + 0.25;
-			ball_pose.position.z = -pc_point.y + 0.55;
-			_ball_pose_pub.publish(ball_pose);
+	pcl::PointXYZ sphere_fit(const cv::Mat image, const PointCloud::ConstPtr pcloud){
+
+		std::vector<cv::Point> ball_pixels;
+		cv::findNonZero(image, ball_pixels);
+
+		int index = 0;
+		std::vector<pcl::PointXYZ> ball_points;
+		for(cv::Point image_point : ball_pixels){
+			pcl::PointXYZ pc_point = pcloud->at(image_point.x, image_point.y);
+
+			if(!std::isnan(pc_point.x) && !std::isnan(pc_point.y) && !std::isnan(pc_point.z)){
+				ball_points.push_back(pc_point);
+			}
+			index++;
 		}
 
-		// std::vector<cv::Point> ball_pixels;
-		// cv::findNonZero(_ball_image, ball_pixels);
-		// double A[ball_pixels.size()][4];
-		// double f[ball_pixels.size()];
+		double alpha = 0.05;
+		double true_radius = 0.03;
+		pcl::PointXYZ pred_center = ball_points.at(0);
 
-		// int index = 0;
-		// printf("------------POINTS------------\n");
-		// for(cv::Point image_point : ball_pixels){
-		// 	pcl::PointXYZ pc_point = p_cloud->at(image_point.x, image_point.y);
+		for(int i = 0; i < 100; i++){
+			for(int p = 0; p < ball_points.size(); p++){
+				double pred_r = sphere_radius(ball_points.at(p), pred_center);
 
-		// 	if(!std::isnan(pc_point.x) && !std::isnan(pc_point.y) && !std::isnan(pc_point.z)){
-		// 		A[index][0] = pc_point.x*2;
-		// 		A[index][1] = pc_point.y*2;
-		// 		A[index][2] = pc_point.z*2;
-		// 		A[index][3] = 1;
+				double gradX = gradient(true_radius, pred_r, ball_points.at(p), pred_center, 0);
+				double gradY = gradient(true_radius, pred_r, ball_points.at(p), pred_center, 1);
+				double gradZ = gradient(true_radius, pred_r, ball_points.at(p), pred_center, 2);
+				
+				pred_center.x -= gradX * alpha;
+				pred_center.y -= gradY * alpha;
+				pred_center.z -= gradZ * alpha;
+			}
+		}
 
-		// 		f[index] = pow(pc_point.x, 2) + pow(pc_point.y, 2) + pow(pc_point.z, 2);
+		return pred_center;
+	}
 
-		// 		printf("x: %f, y: %f, z:%f\n", pc_point.x, pc_point.y, pc_point.z);
-		// 	}
-		// 	index++;
-		// }
+	double gradient(double r, double pred_r, pcl::PointXYZ point, pcl::PointXYZ center, int abc){
+		double abc_point = 0;
+		double abc_center = 0;
+
+		switch(abc){
+			case 0:
+				abc_point = point.x;
+				abc_center = center.x;
+				break;
+			case 1:
+				abc_point = point.y;
+				abc_center = center.y;
+				break;
+			case 2:
+				abc_point = point.z;
+				abc_center = center.z;
+				break;
+		}
+
+		double radius = (sphere_radius(point, center));
+		if(radius != 0.0)
+			return (2 * (r - pred_r) * (abc_point - abc_center)) / radius;
+		return 0;
+
+	}
+
+	double sphere_radius(pcl::PointXYZ point, pcl::PointXYZ center){
+		return sqrt(pow((point.x - center.x),2) + pow((point.y - center.y),2) + pow((point.z - center.z),2));
 	}
 
 	void imageSplit (const sensor_msgs::ImageConstPtr& msg) {

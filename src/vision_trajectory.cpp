@@ -12,7 +12,7 @@ VisionTrajectorySubscriber::VisionTrajectorySubscriber(ros::NodeHandle &n){
 }
 
 
-void VisionTrajectorySubscriber::trajectoryCB(const geometry_msgs::Pose &msg){
+void VisionTrajectorySubscriber::trajectoryCB(const geometry_msgs::PoseStamped &msg){
 
 	// Ensures that only a single goal is ever published
 	if(!_published){
@@ -21,14 +21,13 @@ void VisionTrajectorySubscriber::trajectoryCB(const geometry_msgs::Pose &msg){
 		if(!_prev_pose_exists){
 			_prev_pose = msg;
 			_prev_pose_exists = true;
-			_prev_pose_time = ros::Time::now();
 			return;
 		}
 
 		// Determine the difference in time between now and when the last pose was recorded
-		double delta_t = (ros::Time::now() - _prev_pose_time).toSec();
+		double delta_t = (msg.header.stamp - _prev_pose.header.stamp).toSec();
 		
-		geometry_msgs::Pose start_pose = msg;
+		geometry_msgs::PoseStamped start_pose = msg;
 		geometry_msgs::Twist start_twist;
 
 		// Ensure that the time difference is not too small, as it may cause larger errors
@@ -38,13 +37,12 @@ void VisionTrajectorySubscriber::trajectoryCB(const geometry_msgs::Pose &msg){
 		}
 		
 		// Determine the velocity of the ball using the current and previous positions
-		start_twist.linear.x = (start_pose.position.x - _prev_pose.position.x) / (delta_t);
-		start_twist.linear.y = (start_pose.position.y - _prev_pose.position.y) / (delta_t);
-		start_twist.linear.z = (start_pose.position.z - _prev_pose.position.z) / (delta_t);
+		start_twist.linear.x = (start_pose.pose.position.x - _prev_pose.pose.position.x) / (delta_t);
+		start_twist.linear.y = (start_pose.pose.position.y - _prev_pose.pose.position.y) / (delta_t);
+		start_twist.linear.z = (start_pose.pose.position.z - _prev_pose.pose.position.z) / (delta_t);
 
 		// Update the value of the previous pose
 		_prev_pose = start_pose;
-		_prev_pose_time = ros::Time::now();
 
 		geometry_msgs::Pose pred_pose;
 		geometry_msgs::Twist pred_twist;
@@ -55,7 +53,7 @@ void VisionTrajectorySubscriber::trajectoryCB(const geometry_msgs::Pose &msg){
 		// a position where the arm can catch it
 		for(float t = 0.0; t < 4.0; t+=0.01){
 			// Predict the position of the ball after a certain amount of time
-			predict_trajectory(start_pose, start_twist, t, pred_pose, pred_twist);
+			predict_trajectory(start_pose.pose, start_twist, t, pred_pose, pred_twist);
 
 			// Stop once the first position is found that is within a certain bounding
 			// box in front of the arm

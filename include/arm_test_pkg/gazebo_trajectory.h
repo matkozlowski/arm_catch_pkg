@@ -2,7 +2,7 @@
 #define GAZEBO_TRAJECTORY
 
 #include <ros/ros.h>
-#include "arm_catch_pkg/TrajectoryPredict.h"
+// #include "arm_catch_pkg/TrajectoryPredict.h"
 #include "gazebo_msgs/ModelStates.h"
 #include <cstdlib>
 #include "Eigen/Dense"
