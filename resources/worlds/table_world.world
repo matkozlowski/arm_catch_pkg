@@ -86,10 +86,10 @@
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
     <state world_name='default'>
-      <sim_time>978 950000000</sim_time>
-      <real_time>142 345413685</real_time>
-      <wall_time>1619561645 753189230</wall_time>
-      <iterations>141563</iterations>
+      <sim_time>1013 78000000</sim_time>
+      <real_time>34 288731772</real_time>
+      <wall_time>1621018170 934020175</wall_time>
+      <iterations>34128</iterations>
       <model name='RoboCup SPL Ball'>
         <pose frame=''>0 6 0.0325 0 -0 0</pose>
         <scale>1 1 1</scale>
@@ -111,10 +111,10 @@
         </link>
       </model>
       <model name='kinect_ros'>
-        <pose frame=''>-0.007311 0.250267 0.55 0 -0 1.6</pose>
+        <pose frame=''>0 0.25 0.55 0 -0 1.5708</pose>
         <scale>1 1 1</scale>
         <link name='camera_link'>
-          <pose frame=''>-0.007311 0.250267 0.55 0 -0 1.6</pose>
+          <pose frame=''>0 0.25 0.55 0 -0 1.5708</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -136,8 +136,8 @@
         <link name='link'>
           <pose frame=''>-0.001003 -2.01666 0.499995 -1e-05 -0 -0.006294</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0.004716 0.011087 -9.78157 -0.02217 -0.009429 -1e-06</acceleration>
-          <wrench>-0.004716 0.011087 -9.78157 0 -0 0</wrench>
+          <acceleration>0.004699 0.01102 -9.78158 -0.022037 0.009394 1e-06</acceleration>
+          <wrench>0.004699 0.01102 -9.78158 0 -0 0</wrench>
         </link>
       </model>
       <model name='unit_box_1'>
@@ -146,18 +146,18 @@
         <link name='link'>
           <pose frame=''>-1.00218 -2.00002 0.499995 1e-05 0 -0.005878</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0.004699 -0.011023 -9.78158 0.022042 -0.009396 1e-06</acceleration>
-          <wrench>-0.004699 -0.011023 -9.78158 0 -0 0</wrench>
+          <acceleration>0.004716 -0.011085 -9.78157 0.022166 0.009428 -1e-06</acceleration>
+          <wrench>0.004716 -0.011085 -9.78157 0 -0 0</wrench>
         </link>
       </model>
       <model name='unit_box_2'>
-        <pose frame=''>1.00092 -1.99998 0.499995 -0 1e-05 -0.00257</pose>
+        <pose frame=''>1.00091 -1.99998 0.499995 0 -1e-05 -0.00257</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>1.00092 -1.99998 0.499995 -0 1e-05 -0.00257</pose>
+          <pose frame=''>1.00091 -1.99998 0.499995 0 -1e-05 -0.00257</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0.010597 -0.006192 -9.78231 0.01242 0.02119 1.6e-05</acceleration>
-          <wrench>0.010597 -0.006192 -9.78231 0 -0 0</wrench>
+          <acceleration>-0.010597 0.006192 -9.78231 -0.01242 -0.02119 1.6e-05</acceleration>
+          <wrench>-0.010597 0.006192 -9.78231 0 -0 0</wrench>
         </link>
       </model>
       <light name='sun'>
@@ -268,7 +268,7 @@
     </model>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose frame=''>-11.6874 -0.029154 4.42796 -0 0.27149 -0.019662</pose>
+        <pose frame=''>-1.9142 -0.020286 2.60698 0 0.65949 0.064339</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
