@@ -54,9 +54,7 @@ class BallSegment {
 		srv.request.model_name = "RoboCup SPL Ball";
 		_gz_client.call(srv);
 
-		printf("--------------\n");
-		printf("-------ACTUAL-------\n");
-		ROS_INFO("x: %f, y: %f, z: %f\n", srv.response.pose.position.x, srv.response.pose.position.y, srv.response.pose.position.z);
+		
 
 		cv_bridge::CvImagePtr cv_img;
 		try {
@@ -86,6 +84,11 @@ class BallSegment {
 
 
 		if(centerPoint.x >= 0 && centerPoint.y >= 0){
+			printf("--------------\n");
+			printf("-------ACTUAL-------\n");
+			ROS_INFO("x: %f, y: %f, z: %f\n", srv.response.pose.position.x, srv.response.pose.position.y, srv.response.pose.position.z);
+			ROS_INFO("Time stamp actual: s:%d, ns:%d\n\n", srv.response.header.stamp.sec, srv.response.header.stamp.nsec);
+		
 			pcl::PointXYZ start_center = pcloud->at(centerPoint.x, centerPoint.y);
 			start_center.z += 0.03;
 			pcl::PointXYZ pc_point = sphere_fit(ThreshImage, pcloud, start_center);

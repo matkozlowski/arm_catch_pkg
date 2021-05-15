@@ -34,46 +34,52 @@ void VisionTrajectorySubscriber::trajectoryCB(const geometry_msgs::PoseStamped &
 			double delta_t = (_pose_samples[s+1].header.stamp - _pose_samples[s].header.stamp).toSec();
 
 			geometry_msgs::PoseStamped prev_pose = _pose_samples[s];
-			geometry_msgs::PoseStamped start_pose = _pose_samples[s+1];
-			geometry_msgs::Twist start_twist;
+			geometry_msgs::PoseStamped cur_pose = _pose_samples[s+1];
+			geometry_msgs::PoseStamped start_pose;
+			start_pose.header = cur_pose.header;
+			start_pose.pose.position.x = (cur_pose.pose.position.x + prev_pose.pose.position.x) / 2.0;
+			start_pose.pose.position.y = (cur_pose.pose.position.y + prev_pose.pose.position.y) / 2.0;
+			start_pose.pose.position.z = (cur_pose.pose.position.z + prev_pose.pose.position.z) / 2.0;
 
-			start_twist.linear.x = (start_pose.pose.position.x - prev_pose.pose.position.x) / (delta_t);
-			start_twist.linear.y = (start_pose.pose.position.y - prev_pose.pose.position.y) / (delta_t);
-			start_twist.linear.z = (start_pose.pose.position.z - prev_pose.pose.position.z) / (delta_t);
+			geometry_msgs::Twist start_twist;
+			start_twist.linear.x = (cur_pose.pose.position.x - prev_pose.pose.position.x) / (delta_t);
+			start_twist.linear.y = (cur_pose.pose.position.y - prev_pose.pose.position.y) / (delta_t);
+			start_twist.linear.z = (cur_pose.pose.position.z - prev_pose.pose.position.z) / (delta_t);
 
 			geometry_msgs::Pose pred_pose;
 			geometry_msgs::Twist pred_twist;
 
 			if(!t_found){
-			for(float t = 0.0; t < 4.0; t+=0.01){
-				// Predict the position of the ball after a certain amount of time
-				predict_trajectory(start_pose.pose, start_twist, t, pred_pose, pred_twist);
+				for(float t = 0.0; t < 4.0; t+=0.01){
+					// Predict the position of the ball after a certain amount of time
+					predict_trajectory(start_pose.pose, start_twist, t, pred_pose, pred_twist);
 
-				// Stop once the first position is found that is within a certain bounding
-				// box in front of the arm
-				// TODO:: Change this bounding box, is is currently just a rough guess
-				if(pred_pose.position.z > 0.5 && 
-					pred_pose.position.z < 0.8 &&
-					pred_pose.position.y > 0.2 &&
-					pred_pose.position.y < 0.8 &&
-					pred_pose.position.x > -0.3 &&
-					pred_pose.position.x < 0.3){
-					
-					t_found = true;
-					pred_t = t;
+					// Stop once the first position is found that is within a certain bounding
+					// box in front of the arm
+					// TODO:: Change this bounding box, is is currently just a rough guess
+					if(pred_pose.position.z > 0.5 && 
+						pred_pose.position.z < 0.8 &&
+						pred_pose.position.y > 0.2 &&
+						pred_pose.position.y < 0.8 &&
+						pred_pose.position.x > -0.3 &&
+						pred_pose.position.x < 0.3){
+						
+						t_found = true;
+						pred_t = t;
 
-					pred_poses[s] = pred_pose;
-					pred_twists[s] = pred_twist;
+						pred_poses[s] = pred_pose;
+						pred_twists[s] = pred_twist;
 
-					break;
+						break;
+					}
 				}
 			}
+			else{
+				pred_t -= delta_t;
+				predict_trajectory(start_pose.pose, start_twist, pred_t, pred_pose, pred_twist);
+				pred_poses[s] = pred_pose;
+				pred_twists[s] = pred_twist;
 			}
-
-			pred_t -= delta_t;
-			predict_trajectory(start_pose.pose, start_twist, pred_t, pred_pose, pred_twist);
-			pred_poses[s] = pred_pose;
-			pred_twists[s] = pred_twist;
 		}
 
 		geometry_msgs::Pose avg_pred_pose;
