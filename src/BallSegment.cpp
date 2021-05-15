@@ -86,16 +86,20 @@ class BallSegment {
 
 
 		if(centerPoint.x >= 0 && centerPoint.y >= 0){
-			pcl::PointXYZ pc_point = sphere_fit(ThreshImage, pcloud);
+			pcl::PointXYZ start_center = pcloud->at(centerPoint.x, centerPoint.y);
+			start_center.z += 0.03;
+			pcl::PointXYZ pc_point = sphere_fit(ThreshImage, pcloud, start_center);
 			printf("-------PREDICTED-------\n");
-			ROS_INFO("x: %f, y: %f, z:%f\n\n", pc_point.x, pc_point.z + 0.25, -pc_point.y + 0.55);
+			ROS_INFO("x: %f, y: %f, z:%f\n", pc_point.x, pc_point.z + 0.25, -pc_point.y + 0.55);
+			ROS_INFO("Time stamp pcloud: %ld\n", pcloud->header.stamp);
+			ROS_INFO("Time stamp img: %d\n\n", img->header.stamp.nsec);
 			geometry_msgs::PoseStamped ball_pose;
 			ball_pose.pose.position.x = pc_point.x; 
 			ball_pose.pose.position.y = pc_point.z + .25;
 			ball_pose.pose.position.z = -pc_point.y + .55;
 
 			std_msgs::Header hdr;
-			hdr.stamp = ros::Time::now();
+			hdr.stamp = img->header.stamp;
 			ball_pose.header = hdr;
 
 			_ball_pose_pub.publish(ball_pose);
@@ -134,7 +138,7 @@ class BallSegment {
 		return;
 	}
 
-	pcl::PointXYZ sphere_fit(const cv::Mat image, const PointCloud::ConstPtr pcloud){
+	pcl::PointXYZ sphere_fit(const cv::Mat image, const PointCloud::ConstPtr pcloud, pcl::PointXYZ start_center){
 
 		std::vector<cv::Point> ball_pixels;
 		cv::findNonZero(image, ball_pixels);
@@ -150,11 +154,13 @@ class BallSegment {
 			index++;
 		}
 
-		double alpha = 0.05;
+		double START_ALPHA = 0.5;
+		int EPOCHS = 1000;
+		double alpha = START_ALPHA;
 		double true_radius = 0.03;
 		pcl::PointXYZ pred_center = ball_points.at(0);
 
-		for(int i = 0; i < 100; i++){
+		for(int i = 0; i < EPOCHS; i++){
 			for(int p = 0; p < ball_points.size(); p++){
 				double pred_r = sphere_radius(ball_points.at(p), pred_center);
 
@@ -166,6 +172,7 @@ class BallSegment {
 				pred_center.y -= gradY * alpha;
 				pred_center.z -= gradZ * alpha;
 			}
+			alpha -= (START_ALPHA / EPOCHS) / 1.5;
 		}
 
 		return pred_center;

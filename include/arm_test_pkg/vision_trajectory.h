@@ -21,6 +21,10 @@ protected:
 	bool _prev_pose_exists;
 	//ros::Time _prev_pose_time;
 	geometry_msgs::PoseStamped _prev_pose;
+
+	static const int _SAMPLE_COUNT = 5;
+	int _samples_taken;
+	geometry_msgs::PoseStamped _pose_samples[_SAMPLE_COUNT];
 };
 
 
