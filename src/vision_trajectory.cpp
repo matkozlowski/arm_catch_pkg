@@ -159,7 +159,20 @@ void VisionTrajectorySubscriber::trajectoryCB(const geometry_msgs::PoseStamped &
 			_pub.publish(goal_pose);
 			_published = true;
 		}
-		
+
+		// TODO needs adjustment
+		ros::Duration(0.1).sleep();
+
+		// Initialize action client to close the gripper
+		actionlib::SimpleActionClient<control_msgs::GripperCommandAction> client("/gripper_controller/gripper_cmd", true);
+		client.waitForServer();
+
+		control_msgs::GripperCommandGoal goal;
+		goal.command.position = 0.6;
+		goal.command.max_effort = -1.0; // unlimited effort. TODO probably adjust this
+		client.sendGoal(goal);
+		client.waitForResult(ros::Duration(3.0));
+
 		return;
 	}
 }
