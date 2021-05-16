@@ -11,7 +11,6 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
-  control_msgs
   sensor_msgs
   message_generation
   moveit_core 
@@ -21,7 +20,6 @@ find_package(catkin REQUIRED COMPONENTS
   gazebo_msgs
   cv_bridge
   image_transport
-  actionlib
 )
 
 find_package(PCL REQUIRED)

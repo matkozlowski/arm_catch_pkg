@@ -3,11 +3,6 @@
 
 #include <ros/ros.h>
 // #include "arm_catch_pkg/TrajectoryPredict.h"
-#include <actionlib/client/simple_action_client.h>
-#include "control_msgs/GripperCommandGoal.h"
-#include "control_msgs/GripperCommandAction.h"
-
-
 #include "geometry_msgs/PoseStamped.h"
 #include <cstdlib>
 #include "Eigen/Dense"
