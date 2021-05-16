@@ -16,5 +16,5 @@ Gripper Stuff:
 2) Controlling the gripper via Action Client
 
 	- Add the `gripper_controller_robotiq.yaml` found in this directory to the `src/fmauch_universal_robot/ur_e_gazebo/controller` directory
-	- Control gripper via Action Client
+	- `rosrun arm_catch_pkg send_gripper.py` to test manipulation of gripper
 	- TODO: Will likely need this plugin to work around funky gazebo physics when grasping objects (https://github.com/JenniferBuehler/gazebo-pkgs/tree/master/gazebo_grasp_plugin)
