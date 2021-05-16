@@ -2,6 +2,7 @@
 Replace the file in `src/fmauch_universal_robot/ur_e_gazebo/launch` with this one  
 The modified file creates the gazebo world correctly with the arm, table, and kinect
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 
 
@@ -19,5 +20,7 @@ Gripper Stuff:
 	- Add the `gripper_controller_robotiq.yaml` found in this directory to the `src/fmauch_universal_robot/ur_e_gazebo/controller` directory
 	- Control gripper via Action Client
 	- TODO: Will likely need this plugin to work around funky gazebo physics when grasping objects (https://github.com/JenniferBuehler/gazebo-pkgs/tree/master/gazebo_grasp_plugin)
+=======
+>>>>>>> parent of 769ae22... update README and configuration files
 =======
 >>>>>>> parent of 769ae22... update README and configuration files
