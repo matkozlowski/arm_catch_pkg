@@ -19,11 +19,10 @@ void VisionTrajectorySubscriber::trajectoryCB(const geometry_msgs::PoseStamped &
 	// Ensures that only a single goal is ever published
 	if(!_published){
 
-		if(_samples_taken < _SAMPLE_COUNT){
-			_pose_samples[_samples_taken] = msg;
-			_samples_taken++;
+		_pose_samples[_samples_taken] = msg;
+		_samples_taken++;
+		if(_samples_taken < _SAMPLE_COUNT)
 			return;
-		}
 
 		bool t_found = false;
 		float pred_t = 0;
@@ -50,7 +49,7 @@ void VisionTrajectorySubscriber::trajectoryCB(const geometry_msgs::PoseStamped &
 			geometry_msgs::Twist pred_twist;
 
 			if(!t_found){
-				for(float t = 0.0; t < 4.0; t+=0.01){
+				for(float t = 0.0; t < 2.0; t+=0.01){
 					// Predict the position of the ball after a certain amount of time
 					predict_trajectory(start_pose.pose, start_twist, t, pred_pose, pred_twist);
 
@@ -68,6 +67,7 @@ void VisionTrajectorySubscriber::trajectoryCB(const geometry_msgs::PoseStamped &
 						pred_t = t;
 
 						pred_poses[s] = pred_pose;
+						
 						pred_twists[s] = pred_twist;
 
 						break;
@@ -102,6 +102,7 @@ void VisionTrajectorySubscriber::trajectoryCB(const geometry_msgs::PoseStamped &
 			yt_sum += pred_twists[s].linear.y;
 			zt_sum += pred_twists[s].linear.z;
 		}
+		
 		avg_pred_pose.position.x = x_sum / (double)(_SAMPLE_COUNT - 1);
 		avg_pred_pose.position.y = y_sum / (double)(_SAMPLE_COUNT - 1);
 		avg_pred_pose.position.z = z_sum / (double)(_SAMPLE_COUNT - 1);
@@ -131,6 +132,7 @@ void VisionTrajectorySubscriber::trajectoryCB(const geometry_msgs::PoseStamped &
 		float pitch = atan2(avg_pred_twist.linear.z, avg_pred_twist.linear.y) + M_PI;
 		float yaw = atan2(avg_pred_twist.linear.y, avg_pred_twist.linear.x) + M_PI;
 
+
 		// Determine the orientation of the end-effectory using pitch and yaw
 		Eigen::AngleAxisd rotX(pitch, xAxis);
 		Eigen::AngleAxisd rotZ(yaw, zAxis);
@@ -143,17 +145,19 @@ void VisionTrajectorySubscriber::trajectoryCB(const geometry_msgs::PoseStamped &
 		goal_pose.orientation.z = rotated.z();
 		goal_pose.orientation.w = rotated.w();
 
+		
+
 
 		// Ensure goal pose is in front of arm
-		if(goal_pose.position.z > 0 && goal_pose.position.y > 0){
-			ROS_INFO("Predicted Position:\nX: %f\nY: %f\nZ: %f", 
+		ROS_INFO("Predicted Position:\nX: %f\nY: %f\nZ: %f", 
 				goal_pose.position.x,
 				goal_pose.position.y,
 				goal_pose.position.z); 
 			ROS_INFO("TWIST:\nX pred: %f\nY pred: %f\nZ pred: %f",
 				avg_pred_twist.linear.x,
 				avg_pred_twist.linear.y,
-				avg_pred_twist.linear.z); 
+				avg_pred_twist.linear.z);
+		if(goal_pose.position.z > 0 && goal_pose.position.y > 0){
 
 			// Publish the goal pose
 			_pub.publish(goal_pose);
